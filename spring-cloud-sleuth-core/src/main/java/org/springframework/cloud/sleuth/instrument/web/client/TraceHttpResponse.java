@@ -71,6 +71,7 @@ public class TraceHttpResponse implements ClientHttpResponse {
 	public void close() {
 		try {
 			this.delegate.close();
+			this.interceptor.addResponseTags(this);
 		}
 		finally {
 			this.interceptor.finish();
