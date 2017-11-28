@@ -26,7 +26,9 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.client.ClientHttpResponse;
 /**
  * Abstraction over classes that interact with Http requests. Allows you
  * to enrich the request headers with trace related information.
@@ -84,6 +86,11 @@ abstract class AbstractTraceHttpRequestInterceptor {
 				request.getURI().getPath(),
 				request.getMethod().name(),
 				request.getHeaders());
+	}
+
+	protected void addResponseTags(ClientHttpResponse response) {
+		this.tracer.addTag("http.response.content-length",
+			response.getHeaders().getFirst(HttpHeaders.CONTENT_LENGTH));
 	}
 
 	/**
