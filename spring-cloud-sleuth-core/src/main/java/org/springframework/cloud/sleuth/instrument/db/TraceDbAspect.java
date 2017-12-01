@@ -55,7 +55,6 @@ public class TraceDbAspect implements BeanFactoryAware {
 
 	@Around("anyPublicRepositoryMethod()")
 	public Object traceDatabaseCall(ProceedingJoinPoint pjp) throws Throwable {
-		log.warn("SOMETHING IS HAPPENING HERE");
 		Span span = null;
 		Object result = null;
 		MongoTemplate template = this.beanFactory.getBean(MongoTemplate.class);
@@ -69,10 +68,18 @@ public class TraceDbAspect implements BeanFactoryAware {
 			this.tracer.addTag("db.instance", db.getName());
 			this.tracer.addTag("peer.address", addr.toString());
 			span.logEvent(Span.CLIENT_SEND);
+			int querySize = 0;
+			Object[] args = pjp.getArgs();
+			for(Object arg : args) {
+				querySize += arg.toString().getBytes().length;
+			}
+			this.tracer.addTag("db.query.size", Integer.toString(querySize));
 			result = pjp.proceed();
-			// FIXME Calculate result size
-			this.tracer.addTag("db.query.result.size",
-				Integer.toString(result.toString().getBytes().length));
+			int resultSize = 0;
+			if(result != null) {
+				resultSize = result.toString().getBytes().length;
+			}
+			this.tracer.addTag("db.query.result.size", Integer.toString(resultSize));
 		} finally {
 			this.tracer.close(span);
 		}
